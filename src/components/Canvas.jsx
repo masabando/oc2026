@@ -55,11 +55,17 @@ export default function Canvas() {
     } = init(ref.current);
     controls.connect();
     camera.position.set(0, 0, 4);
-    create.ambientLight({ intensity: 0.8 });
+    create.ambientLight({ intensity: 0.5 });
     const dlight = create.directionalLight({
       intensity: 1.2,
+      position: [10, 10, -10],
     });
     dlight.shadow.bias = -0.001;
+    // const dlight2 = create.directionalLight({
+    //   intensity: 0.5,
+    //   position: [10, 10, -10],
+    // });
+    // dlight2.shadow.bias = -0.001;
 
     // helper.axes()
 
@@ -82,8 +88,18 @@ export default function Canvas() {
       .then((vrm) => {
         girl = vrm;
         girl.scene.visible = false;
-        girl.scene.position.set(0, -1.5, 0);
+        girl.scene.position.set(0, -1.5, -1);
       });
+
+    // text
+    const text = create.text("Welcome to 近大高専！", {
+      fontSize: 27,
+      position: [0, 1.5, -0.5],
+      size: [3, 0.5],
+      rotation: [0, Math.PI, 0],
+      color: "blue",
+    });
+    text.visible = false;
 
     // flakes
     const range = 5;
@@ -144,12 +160,15 @@ export default function Canvas() {
     for (let i = 0; i < flakes.length; i++) {
       for (let n = 0; n < 3; n++) {
         const c = cube.clone();
+        c.scale.setScalar(Math.random() * 0.8 + 0.4);
         c.position.set(...randomPositions());
         c.userData = { rotation: randomRotations() };
         const cn = cone.clone();
+        cn.scale.setScalar(Math.random() * 0.8 + 0.4);
         cn.position.set(...randomPositions());
         cn.userData = { rotation: randomRotations() };
         const t = torus.clone();
+        t.scale.setScalar(Math.random() * 0.8 + 0.4);
         t.position.set(...randomPositions());
         t.userData = { rotation: randomRotations() };
         flakes[i].add(c, cn, t);
@@ -169,16 +188,28 @@ export default function Canvas() {
 
     const plane = create.plane({
       size: 3,
+      material: "Basic",
       option: {
         // map: videoTexture,
         map: tex,
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide,
       },
     });
 
     plane.material.needsUpdate = true;
 
-    animate(({ delta }) => {
+    // octahedron group
+    const ktc = create.plane({
+      position: [-1.3, 0, -1],
+      option: {
+        map: load.texture("./kindai-logo.png"),
+        side: THREE.DoubleSide,
+        transparent: true,
+      },
+    });
+    ktc.visible = false;
+
+    animate(({ delta, time }) => {
       tex.needsUpdate = true;
       // console.log(camera.rotation.y);
       const dir = new THREE.Vector3();
@@ -195,9 +226,14 @@ export default function Canvas() {
           if (girl) {
             girl.scene.visible = false;
           }
+          // hidden text
+          text.visible = false;
+          // hidden flakes
           flakes.forEach((group) => {
             group.visible = false;
           });
+          // hidden ktc logo
+          ktc.visible = false;
         }
       } else {
         // back
@@ -211,11 +247,17 @@ export default function Canvas() {
           if (girl) {
             girl.scene.visible = true;
           }
+          // show text
+          text.visible = true;
+          // show flakes
           flakes.forEach((group) => {
             group.visible = true;
           });
+          // show ktc logo
+          ktc.visible = true;
         }
         ocean.update(delta);
+        text.position.y = Math.sin(time) * 0.5 + 1.5;
         flakes.forEach((group) => {
           group.children.forEach((c) => {
             c.rotation.x += c.userData.rotation.x;
@@ -228,6 +270,7 @@ export default function Canvas() {
         if (girl) {
           girl.updateWithAnimation(delta);
         }
+        ktc.rotation.y += delta * 0.8;
       }
     });
     return () => {
