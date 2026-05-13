@@ -54,6 +54,7 @@ export default function Canvas() {
       THREE,
     } = init(ref.current);
     controls.connect();
+    controls.enablePan = false;
     camera.position.set(0, 0, 4);
     create.ambientLight({ intensity: 0.5 });
     const dlight = create.directionalLight({
